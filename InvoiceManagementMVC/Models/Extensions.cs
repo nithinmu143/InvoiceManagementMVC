@@ -1,30 +1,24 @@
-﻿using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
+﻿namespace InvoiceManagementMVC.Models;
 
-namespace InvoiceManagementMVC.Models
+public partial class InvoiceItem
 {
-    public class Extensions
+    public decimal? ItemTotal()
     {
+        return Quantity * Price;
     }
+}
 
-    public partial class InvoiceItem
+public partial class Invoice
+{
+    public decimal? Total()
     {
-        public decimal? ItemTotal()
-        {
-            return Quantity * Price;
-        }
-    }
+        decimal? total = 0;
 
-    public partial class Invoice
-    {
-        public decimal? Total()
+        foreach (var item in InvoiceItems)
         {
-            decimal? total = 0;
-            foreach (var item in this.InvoiceItems)
-            {
-                total += item.ItemTotal();
-            }
-            return total;
+            total += item.ItemTotal();
         }
+
+        return total;
     }
 }

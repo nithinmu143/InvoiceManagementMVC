@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using InvoiceManagementMVC.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using InvoiceManagementMVC.Models;
 
 namespace InvoiceManagementMVC.Controllers
 {
@@ -21,12 +16,11 @@ namespace InvoiceManagementMVC.Controllers
         // GET: Invoices
         public async Task<IActionResult> Index()
         {
-            var invoices = await _context.Invoices.ToListAsync();
-            foreach (var invoice in invoices)
-            {
-                invoice.InvoiceItems = _context.InvoiceItems
-                    .Where(i => i.InvoiceNumber == invoice.InvoiceNumber).ToList();
-            }
+            var invoices = await _context.Invoices
+                .Include(invoice => invoice.InvoiceItems)
+                .AsNoTracking()
+                .ToListAsync();
+
             return View(invoices);
         }
 
@@ -39,7 +33,9 @@ namespace InvoiceManagementMVC.Controllers
             }
 
             var invoice = await _context.Invoices
-                .FirstOrDefaultAsync(m => m.InvoiceNumber == id);
+                .AsNoTracking()
+                .FirstOrDefaultAsync(invoice => invoice.InvoiceNumber == id);
+
             if (invoice == null)
             {
                 return NotFound();
@@ -55,8 +51,6 @@ namespace InvoiceManagementMVC.Controllers
         }
 
         // POST: Invoices/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("InvoiceNumber,DateOfIssue")] Invoice invoice)
@@ -65,6 +59,7 @@ namespace InvoiceManagementMVC.Controllers
             {
                 _context.Add(invoice);
                 await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
             return View(invoice);
@@ -79,6 +74,7 @@ namespace InvoiceManagementMVC.Controllers
             }
 
             var invoice = await _context.Invoices.FindAsync(id);
+
             if (invoice == null)
             {
                 return NotFound();
@@ -87,8 +83,6 @@ namespace InvoiceManagementMVC.Controllers
         }
 
         // POST: Invoices/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("InvoiceNumber,DateOfIssue")] Invoice invoice)
@@ -107,7 +101,7 @@ namespace InvoiceManagementMVC.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!InvoiceExists(invoice.InvoiceNumber))
+                    if (!await InvoiceExistsAsync(invoice.InvoiceNumber))
                     {
                         return NotFound();
                     }
@@ -130,7 +124,9 @@ namespace InvoiceManagementMVC.Controllers
             }
 
             var invoice = await _context.Invoices
-                .FirstOrDefaultAsync(m => m.InvoiceNumber == id);
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(invoice => invoice.InvoiceNumber == id);
+
             if (invoice == null)
             {
                 return NotFound();
@@ -144,19 +140,24 @@ namespace InvoiceManagementMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var invoice = await _context.Invoices.FindAsync(id);
+            var invoice = await _context.Invoices
+                .Include(invoice => invoice.InvoiceItems)
+                .FirstOrDefaultAsync(invoice => invoice.InvoiceNumber == id);
+
             if (invoice != null)
             {
+                _context.InvoiceItems.RemoveRange(invoice.InvoiceItems);
                 _context.Invoices.Remove(invoice);
+
+                await _context.SaveChangesAsync();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool InvoiceExists(int id)
+        private Task<bool> InvoiceExistsAsync(int id)
         {
-            return _context.Invoices.Any(e => e.InvoiceNumber == id);
+            return _context.Invoices.AnyAsync(invoice => invoice.InvoiceNumber == id);
         }
     }
 }

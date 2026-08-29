@@ -1,8 +1,13 @@
 using InvoiceManagementMVC.Models;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<InvoicesContext>();
+var connectionString =
+    builder.Configuration.GetConnectionString("InvoicesDB")
+    ?? throw new InvalidOperationException("Connection string 'InvoicesDB' was not found.");
+
+builder.Services.AddDbContext<InvoicesContext>(options => options.UseSqlServer(connectionString));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -26,7 +31,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=Invoices}/{action=Index}/{id?}")
     .WithStaticAssets();
 
 
