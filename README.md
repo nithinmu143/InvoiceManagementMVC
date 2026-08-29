@@ -86,20 +86,6 @@ Using `Include()` avoids issuing a separate query for the invoice items of every
 
 For read-only queries, `AsNoTracking()` is used where entity tracking is not required.
 
-The resulting flow is:
-
-```text
-Invoices
-   ↓
-Include(InvoiceItems)
-   ↓
-EF Core
-   ↓
-Invoice + related items
-   ↓
-computed total
-```
-
 ---
 
 ## Partial-Class Business Extensions
@@ -137,11 +123,7 @@ This keeps custom calculation logic separate from code that may be regenerated f
 
 ## Configuration
 
-The SQL Server connection string is provided through ASP.NET Core configuration:
-
-```text
-ConnectionStrings:InvoicesDB
-```
+The SQL Server connection string is provided through ASP.NET Core configuration as `ConnectionStrings:InvoicesDB`.
 
 Database configuration is registered in `Program.cs` and passed to `InvoicesContext` through `DbContextOptions`.
 
@@ -159,23 +141,9 @@ Authentication: Windows Integrated Security
 
 ## Database Setup
 
-A reproducible local SQL Server schema is provided through:
+A reproducible local SQL Server schema is provided through `database/setup.sql`.
 
-```text
-database/setup.sql
-```
-
-The script creates the `invoices` database and the required tables when they do not already exist:
-
-```text
-Invoices
-   1
-   │
-   └─────── *
-          InvoiceItem
-```
-
-The setup preserves the same one-to-many relationship represented by the Database-First EF Core model.
+The script creates the `invoices` database and the required `Invoices` and `InvoiceItem` tables when they do not already exist, preserving the one-to-many relationship represented by the Database-First EF Core model.
 
 ---
 
