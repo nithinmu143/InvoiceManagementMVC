@@ -1,24 +1,170 @@
 ﻿@model InvoiceManagementMVC.Models.Invoice
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Invoice Details";
 }
 
-<h1>Details</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1>Invoice Details</h1>
+        <p class="text-muted mb-0">View and manage invoice information</p>
+    </div>
 
-<div>
-    <h4>Invoice</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DateOfIssue)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DateOfIssue)
-        </dd>
-    </dl>
+    <a asp-action="Index" class="btn btn-secondary">
+        ← Back to Invoices
+    </a>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.InvoiceNumber">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+
+<hr />
+
+<!-- Invoice Information -->
+
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+
+        <div class="row">
+
+            <div class="col-md-6">
+                <h3>Invoice #@Model.InvoiceNumber</h3>
+            </div>
+
+            <div class="col-md-6 text-md-end">
+                <strong>Date of Issue:</strong>
+                @Model.DateOfIssue.ToString("dd-MM-yyyy HH:mm:ss")
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- Invoice Items -->
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+
+    <h3 class="mb-0">Invoice Items</h3>
+
+    <a asp-controller="InvoiceItems"
+       asp-action="Create"
+       asp-route-invoiceNumber="@Model.InvoiceNumber"
+       class="btn btn-primary">
+        + Add Item
+    </a>
+
+</div>
+
+@if (Model.InvoiceItems.Any())
+{
+    <div class="table-responsive">
+
+        <table class="table table-bordered table-striped align-middle">
+
+            <thead class="table-dark">
+
+                <tr>
+                    <th>Title</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                    <th>Actions</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @foreach (var item in Model.InvoiceItems)
+                {
+                    <tr>
+
+                        <td>
+                            <strong>@item.Title</strong>
+                        </td>
+
+                        <td>
+                            @((item.Quantity ?? 0).ToString("N2"))
+                        </td>
+
+                        <td>
+                            €@((item.Price ?? 0).ToString("N2"))
+                        </td>
+
+                        <td>
+                            <strong>
+                                €@((item.ItemTotal() ?? 0).ToString("N2"))
+                            </strong>
+                        </td>
+
+                        <td>
+
+                            <a asp-controller="InvoiceItems"
+                               asp-action="Edit"
+                               asp-route-id="@item.Id"
+                               class="btn btn-sm btn-warning">
+                                Edit
+                            </a>
+
+                            <a asp-controller="InvoiceItems"
+                               asp-action="Delete"
+                               asp-route-id="@item.Id"
+                               class="btn btn-sm btn-danger ms-1">
+                                Delete
+                            </a>
+
+                        </td>
+
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+}
+else
+{
+    <div class="alert alert-info">
+        No items have been added to this invoice yet.
+    </div>
+}
+
+<!-- Invoice Total -->
+
+<div class="card mt-4 shadow-sm">
+
+    <div class="card-body text-end">
+
+        <h3 class="mb-0">
+            Invoice Total:
+            <strong>
+                €@((Model.Total() ?? 0).ToString("N2"))
+            </strong>
+        </h3>
+
+    </div>
+
+</div>
+
+<!-- Bottom Actions -->
+
+<div class="mt-4">
+
+    <a asp-action="Edit"
+       asp-route-id="@Model.InvoiceNumber"
+       class="btn btn-warning">
+        Edit Invoice
+    </a>
+
+    <a asp-action="Delete"
+       asp-route-id="@Model.InvoiceNumber"
+       class="btn btn-danger ms-2">
+        Delete Invoice
+    </a>
+
+    <a asp-action="Index"
+       class="btn btn-secondary ms-2">
+        Back to List
+    </a>
+
 </div>
